@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const SignupTeacher = () => {
   const [formData, setFormData] = useState({
@@ -15,10 +17,63 @@ const SignupTeacher = () => {
     confirmPassword: "",
     expertise: "",
   });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Teacher signup:", formData);
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            role: 'teacher',
+            expertise: formData.expertise,
+          },
+          emailRedirectTo: `${window.location.origin}/teacher/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase.from('pending_approvals').insert({
+          user_id: data.user.id,
+          requested_role: 'teacher',
+          full_name: formData.name,
+          email: formData.email,
+          expertise: formData.expertise,
+        });
+
+        toast({
+          title: "Registration Successful",
+          description: "Your account is pending approval. You'll receive an email once approved within 24-48 hours.",
+        });
+        navigate("/auth/login");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -106,8 +161,8 @@ const SignupTeacher = () => {
               />
             </div>
 
-            <Button type="submit" variant="hero" size="lg" className="w-full">
-              Create Account
+            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
