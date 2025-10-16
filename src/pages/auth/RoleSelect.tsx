@@ -93,16 +93,6 @@ const RoleSelect = () => {
           })}
         </div>
 
-        {/* Admin Note */}
-        <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20 text-center">
-          <Users className="h-6 w-6 text-primary mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">
-            Master Admin access available at{" "}
-            <Link to="/auth/login" className="text-primary hover:underline">
-              ys304123@gmail.com
-            </Link>
-          </p>
-        </Card>
 
         {/* Sign In Link */}
         <div className="text-center">

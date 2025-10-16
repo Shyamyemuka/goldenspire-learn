@@ -9,14 +9,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-border bg-card/50 backdrop-blur-sm hover:bg-card hover:border-primary/50",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent/10 hover:text-accent",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl border-2 border-primary/50 hover:border-primary transition-all duration-300 hover:shadow-[0_0_30px_hsl(43_66%_53%/0.3)]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 border-2 border-destructive/50 hover:border-destructive",
+        outline: "border-2 border-primary/30 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-primary/60 transition-all duration-300 hover:shadow-[0_0_20px_hsl(43_66%_53%/0.2)] relative overflow-hidden group",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border-2 border-primary/20 hover:border-primary/40",
+        ghost: "hover:bg-accent/10 hover:text-accent border-2 border-transparent hover:border-primary/30",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-gold text-primary-foreground font-semibold shadow-[var(--shadow-gold)] hover:shadow-[0_0_60px_hsl(43_66%_53%/0.3)] hover:scale-105 transition-all duration-300",
-        premium: "bg-card border-2 border-primary/30 text-foreground hover:border-primary/60 hover:bg-primary/5 backdrop-blur-sm",
+        hero: "bg-gradient-gold text-primary-foreground font-semibold shadow-[var(--shadow-gold)] hover:shadow-[0_0_60px_hsl(43_66%_53%/0.4)] hover:scale-105 transition-all duration-300 border-2 border-primary",
+        premium: "bg-card border-2 border-primary/30 text-foreground hover:border-primary/60 hover:bg-primary/5 backdrop-blur-sm transition-all duration-300 hover:shadow-[0_0_25px_hsl(43_66%_53%/0.25)] relative overflow-hidden group",
       },
       size: {
         default: "h-11 px-6 py-2",

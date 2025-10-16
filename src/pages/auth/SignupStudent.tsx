@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -78,8 +78,16 @@ const SignupStudent = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-card border-border animate-fade-in">
+      <Card className="w-full max-w-md p-8 bg-card animate-fade-in">
         <div className="space-y-6">
+          {/* Back Button */}
+          <Link to="/auth/role-select">
+            <Button variant="ghost" size="sm" className="mb-2">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          
           {/* Header */}
           <div className="text-center space-y-2">
             <Link to="/" className="inline-flex items-center gap-2 mb-4">

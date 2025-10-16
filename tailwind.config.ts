@@ -113,6 +113,24 @@ export default {
           "50%": {
             transform: "translateY(-10px)"
           }
+        },
+        "shimmer": {
+          "0%": {
+            backgroundPosition: "-200% 0"
+          },
+          "100%": {
+            backgroundPosition: "200% 0"
+          }
+        },
+        "glow-pulse": {
+          "0%, 100%": {
+            boxShadow: "0 0 20px hsl(43 66% 53% / 0.3), 0 0 40px hsl(43 66% 53% / 0.1)",
+            borderColor: "hsl(43 66% 53% / 0.5)"
+          },
+          "50%": {
+            boxShadow: "0 0 40px hsl(43 66% 53% / 0.6), 0 0 80px hsl(43 66% 53% / 0.2)",
+            borderColor: "hsl(43 66% 53% / 1)"
+          }
         }
       },
       animation: {
@@ -122,6 +140,8 @@ export default {
         "slide-in": "slide-in 0.5s ease-out",
         "glow": "glow 3s ease-in-out infinite",
         "float": "float 3s ease-in-out infinite",
+        "shimmer": "shimmer 3s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
       },
       backgroundImage: {
         'gradient-gold': 'var(--gradient-gold)',

@@ -53,10 +53,17 @@ All colors MUST be HSL.
     /* Custom gradients */
     --gradient-gold: linear-gradient(135deg, hsl(43, 66%, 53%), hsl(43, 91%, 38%));
     --gradient-dark: linear-gradient(180deg, hsl(0, 0%, 10%), hsl(0, 0%, 4%));
+    --gradient-shimmer: linear-gradient(90deg, transparent, hsl(43 66% 53% / 0.3), transparent);
     
     /* Shadows and glows */
     --shadow-gold: 0 0 40px hsl(43 66% 53% / 0.2);
+    --shadow-gold-intense: 0 0 60px hsl(43 66% 53% / 0.4);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.5);
+    
+    /* Outline colors */
+    --outline-gold: hsl(43 66% 53%);
+    --outline-gold-dark: hsl(43 91% 38%);
+    --outline-gold-light: hsl(45 100% 51%);
     
     /* Sidebar */
     --sidebar-background: 0 0% 6%;
