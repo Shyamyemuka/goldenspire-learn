@@ -2,43 +2,84 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   GraduationCap,
-  Plus,
   Users,
   BookOpen,
-  TrendingUp,
-  DollarSign,
-  Eye,
-  Star,
+  Plus,
+  Bell,
+  FileText,
+  CheckCircle,
   Clock,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const TeacherDashboard = () => {
-  const courses = [
-    {
-      id: 1,
-      title: "Advanced Web Development",
-      students: 245,
-      rating: 4.8,
-      revenue: 12450,
-      status: "Published",
-      thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400",
-    },
-    {
-      id: 2,
-      title: "React Masterclass 2025",
-      students: 189,
-      rating: 4.9,
-      revenue: 9870,
-      status: "Published",
-      thumbnail: "https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=400",
-    },
-  ];
+  const [session, setSession] = useState<any>(null);
 
-  const recentActivity = [
-    { id: 1, type: "enrollment", student: "John Doe", course: "Advanced Web Development", time: "2h ago" },
-    { id: 2, type: "review", student: "Jane Smith", course: "React Masterclass 2025", time: "5h ago" },
-    { id: 3, type: "question", student: "Mike Johnson", course: "Advanced Web Development", time: "1d ago" },
-  ];
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['teacher-courses', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      const { data, error } = await supabase
+        .from('courses')
+        .select(`
+          *,
+          enrollments(count)
+        `)
+        .eq('teacher_id', session.user.id);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  const { data: pendingApprovals = [] } = useQuery({
+    queryKey: ['pending-approvals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pending_approvals')
+        .select('*')
+        .eq('requested_role', 'student')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!session?.user?.id,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,17 +94,23 @@ const TeacherDashboard = () => {
               </span>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm">
-                My Courses
-              </Button>
-              <Button variant="ghost" size="sm">
-                Students
-              </Button>
-              <Button variant="ghost" size="sm">
-                Analytics
-              </Button>
+              <Link to="/teacher/courses">
+                <Button variant="ghost" size="sm">
+                  My Courses
+                </Button>
+              </Link>
+              <div className="relative">
+                <Button variant="ghost" size="icon">
+                  <Bell className="h-5 w-5" />
+                </Button>
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-xs flex items-center justify-center text-white">
+                    {notifications.length}
+                  </span>
+                )}
+              </div>
               <div className="h-10 w-10 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">JS</span>
+                <span className="text-sm font-semibold text-primary">T</span>
               </div>
             </div>
           </div>
@@ -74,24 +121,26 @@ const TeacherDashboard = () => {
         {/* Welcome Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Welcome back, Prof. Johnson! 👋</h1>
-            <p className="text-muted-foreground">Here's what's happening with your courses</p>
+            <h1 className="text-4xl font-bold mb-2">Welcome back, Teacher! 👋</h1>
+            <p className="text-muted-foreground">Manage your courses and engage with students</p>
           </div>
-          <Button variant="hero" size="lg" className="gap-2">
-            <Plus className="h-5 w-5" />
-            Create New Course
-          </Button>
+          <Link to="/teacher/courses/create">
+            <Button size="lg" className="bg-gradient-gold hover:shadow-[var(--shadow-gold)]">
+              <Plus className="mr-2 h-5 w-5" />
+              Create New Course
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6 bg-card border-border hover:border-primary/40 transition-all">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Users className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold">434</div>
+                <div className="text-2xl font-bold">{courses.reduce((sum, c: any) => sum + (c.enrollments?.[0]?.count || 0), 0)}</div>
                 <div className="text-sm text-muted-foreground">Total Students</div>
               </div>
             </div>
@@ -103,7 +152,7 @@ const TeacherDashboard = () => {
                 <BookOpen className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold">6</div>
+                <div className="text-2xl font-bold">{courses.length}</div>
                 <div className="text-sm text-muted-foreground">Active Courses</div>
               </div>
             </div>
@@ -112,115 +161,121 @@ const TeacherDashboard = () => {
           <Card className="p-6 bg-card border-border hover:border-primary/40 transition-all">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Star className="h-6 w-6 text-primary" />
+                <CheckCircle className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <div className="text-2xl font-bold">4.8</div>
-                <div className="text-sm text-muted-foreground">Avg Rating</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-card border-border hover:border-primary/40 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">$22K</div>
-                <div className="text-sm text-muted-foreground">This Month</div>
+                <div className="text-2xl font-bold">{pendingApprovals.length}</div>
+                <div className="text-sm text-muted-foreground">Pending Approvals</div>
               </div>
             </div>
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* My Courses */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">My Courses</h2>
-              <Button variant="ghost">View All</Button>
+        {/* Pending Approvals Widget */}
+        {pendingApprovals.length > 0 && (
+          <Card className="p-6 bg-card border-border">
+            <h3 className="text-lg font-semibold mb-4">Pending Student Approvals</h3>
+            <div className="space-y-3">
+              {pendingApprovals.slice(0, 3).map((approval: any) => (
+                <div key={approval.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="font-medium">{approval.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{approval.email}</p>
+                  </div>
+                  <Link to="/teacher/approvals">
+                    <Button size="sm">Review</Button>
+                  </Link>
+                </div>
+              ))}
             </div>
-            <div className="space-y-4">
-              {courses.map((course) => (
+            {pendingApprovals.length > 3 && (
+              <Link to="/teacher/approvals">
+                <Button variant="ghost" className="w-full mt-4">
+                  View All ({pendingApprovals.length})
+                </Button>
+              </Link>
+            )}
+          </Card>
+        )}
+
+        {/* My Courses */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">My Courses</h2>
+            <Link to="/teacher/courses">
+              <Button variant="ghost">View All</Button>
+            </Link>
+          </div>
+          {courses.length === 0 ? (
+            <Card className="p-12 text-center bg-card border-border">
+              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No courses yet</h3>
+              <p className="text-muted-foreground mb-4">Create your first course to get started</p>
+              <Link to="/teacher/courses/create">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Course
+                </Button>
+              </Link>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-6">
+              {courses.slice(0, 3).map((course: any) => (
                 <Card
                   key={course.id}
-                  className="p-6 bg-card border-border hover:border-primary/40 transition-all"
+                  className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all hover:shadow-[var(--shadow-gold)] group"
                 >
-                  <div className="flex gap-4">
-                    <div className="w-32 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-lg">{course.title}</h3>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>{course.students} students</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-primary text-primary" />
-                              <span>{course.rating}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xl font-bold text-primary">
-                            ${course.revenue.toLocaleString()}
-                          </div>
-                          <div className="text-xs text-muted-foreground">Revenue</div>
-                        </div>
+                  <div className="p-6 space-y-4">
+                    <h3 className="font-semibold text-lg line-clamp-2">{course.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span>{course.enrollments?.[0]?.count || 0} students</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Analytics
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          Edit Course
-                        </Button>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{course.duration}h</span>
                       </div>
                     </div>
+                    <Link to={`/teacher/courses/${course.id}`}>
+                      <Button variant="default" size="sm" className="w-full">
+                        Manage Course
+                      </Button>
+                    </Link>
                   </div>
                 </Card>
               ))}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Recent Activity */}
+        {/* Notifications */}
+        {notifications.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Recent Activity</h2>
+            <h2 className="text-2xl font-bold">Recent Notifications</h2>
             <Card className="p-6 bg-card border-border">
               <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
+                {notifications.map((notification: any) => (
+                  <div
+                    key={notification.id}
+                    className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0"
+                  >
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      {activity.type === "enrollment" && <Users className="h-5 w-5 text-primary" />}
-                      {activity.type === "review" && <Star className="h-5 w-5 text-primary" />}
-                      {activity.type === "question" && <BookOpen className="h-5 w-5 text-primary" />}
+                      <FileText className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">
-                        {activity.student}
-                        {activity.type === "enrollment" && " enrolled in"}
-                        {activity.type === "review" && " reviewed"}
-                        {activity.type === "question" && " asked a question in"}
+                    <div className="flex-1">
+                      <p className="text-sm">{notification.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(notification.created_at).toLocaleDateString()}
                       </p>
-                      <p className="text-sm text-muted-foreground truncate">{activity.course}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </Card>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
